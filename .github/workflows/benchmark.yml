@@ -107,6 +107,7 @@ jobs:
           mkdir compare_results
           cp $t1 compare_results
           cp $t2 compare_results
+          ls
 
       - name: Compare latest commit results to the master branch results
         run: |
