@@ -11,22 +11,26 @@ data = {}
 master_idx = 0
 latest_idx = 0
 commit_ind = 0
-for diret in os.walk(cwd + "/compare_results_*"):
-    files = diret[2]
+compare_results_folders = [
+    diret[0] for diret in os.walk(cwd) if diret[0].startswith(cwd + "/compare_results_")
+]
+
+for folder in compare_results_folders:
+    files = os.listdir(folder)
     timing_file_exists = False
 
     for filename in files:
-        if filename.find("json") != -1:  # check if json output file is present
+        if filename.endswith(".json"):  # check if json output file is present
             try:
-                filepath = os.path.join(diret[0], filename)
+                filepath = os.path.join(folder, filename)
                 with open(filepath) as f:
                     print(filepath)
                     curr_data = json.load(f)
                     commit_id = curr_data["commit_info"]["id"][0:7]
                     data[commit_id] = curr_data
-                    if filepath.find("master") != -1:
+                    if "master" in filepath:
                         master_idx = commit_ind
-                    elif filepath.find("Latest_Commit") != -1:
+                    elif "Latest_Commit" in filepath:
                         latest_idx = commit_ind
                     commit_ind += 1
             except Exception as e:
