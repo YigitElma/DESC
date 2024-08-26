@@ -11,7 +11,7 @@ data = {}
 master_idx = 0
 latest_idx = 0
 commit_ind = 0
-for diret in os.walk(cwd + "/compare_results"):
+for diret in os.walk(cwd + "/compare_results_1"):
     files = diret[2]
     timing_file_exists = False
 
