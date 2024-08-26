@@ -104,10 +104,9 @@ jobs:
           find .benchmarks/ -type f -printf "%T@ %p\n" | sort -n | cut -d' ' -f 2- | tail -n 2 | head -n 1 > temp2
           t1=$(cat temp1)
           t2=$(cat temp2)
-          mkdir compare_results
-          cp $t1 compare_results
-          cp $t2 compare_results
-          ls
+          mkdir compare_results_${{ matrix.group }}
+          cp $t1 compare_results_${{ matrix.group }}
+          cp $t2 compare_results_${{ matrix.group }}
 
       - name: Compare latest commit results to the master branch results
         run: |
