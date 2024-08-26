@@ -128,5 +128,5 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: benchmark_artifact
+          name: benchmark_artifact_${{ matrix.group }}
           path: tests/benchmarks/.benchmarks
