@@ -9,7 +9,6 @@ import desc
 desc.set_device("cpu")
 import desc.examples
 from desc.basis import FourierZernikeBasis
-from desc.equilibrium import Equilibrium
 from desc.grid import ConcentricGrid, LinearGrid
 from desc.magnetic_fields import ToroidalMagneticField
 from desc.objectives import (
@@ -25,7 +24,6 @@ from desc.objectives import (
     maybe_add_self_consistency,
 )
 from desc.optimize import LinearConstraintProjection, ProximalProjection
-from desc.perturbations import perturb
 from desc.transform import Transform
 
 
@@ -140,7 +138,6 @@ def test_proximal_jac_atf(benchmark):
     benchmark.pedantic(run, args=(x,), rounds=15, iterations=1)
 
 
-
 @pytest.mark.slow
 @pytest.mark.benchmark
 def test_proximal_freeb_jac(benchmark):
@@ -164,4 +161,3 @@ def test_proximal_freeb_jac(benchmark):
         obj.jac_scaled(x, prox.constants).block_until_ready()
 
     benchmark.pedantic(run, args=(x,), rounds=15, iterations=1)
-
