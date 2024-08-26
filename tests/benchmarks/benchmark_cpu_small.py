@@ -1,7 +1,6 @@
 """Benchmarks for timing comparison on cpu (that are small enough to run on CI)."""
 
 import jax
-import numpy as np
 import pytest
 
 import desc
@@ -9,21 +8,14 @@ import desc
 desc.set_device("cpu")
 import desc.examples
 from desc.basis import FourierZernikeBasis
-from desc.grid import ConcentricGrid, LinearGrid
-from desc.magnetic_fields import ToroidalMagneticField
+from desc.grid import ConcentricGrid
 from desc.objectives import (
-    BoundaryError,
-    FixCurrent,
-    FixPressure,
-    FixPsi,
-    ForceBalance,
     ObjectiveFunction,
-    QuasisymmetryTwoTerm,
     get_equilibrium_objective,
     get_fixed_boundary_constraints,
     maybe_add_self_consistency,
 )
-from desc.optimize import LinearConstraintProjection, ProximalProjection
+from desc.optimize import LinearConstraintProjection
 from desc.transform import Transform
 
 
@@ -114,50 +106,5 @@ def test_objective_jac_dshape_current(benchmark):
 
     def run(x):
         objective.jac_scaled(x, objective.constants).block_until_ready()
-
-    benchmark.pedantic(run, args=(x,), rounds=15, iterations=1)
-
-
-@pytest.mark.slow
-@pytest.mark.benchmark
-def test_proximal_jac_atf(benchmark):
-    """Benchmark computing jacobian of constrained proximal projection."""
-    jax.clear_caches()
-    eq = desc.examples.get("ATF")
-    grid = LinearGrid(M=eq.M_grid, N=eq.N_grid, NFP=eq.NFP, rho=np.linspace(0.1, 1, 10))
-    objective = ObjectiveFunction(QuasisymmetryTwoTerm(eq, grid=grid))
-    constraint = ObjectiveFunction(ForceBalance(eq))
-    prox = ProximalProjection(objective, constraint, eq)
-    prox.build()
-    prox.compile()
-    x = prox.x(eq)
-
-    def run(x):
-        prox.jac_scaled(x, prox.constants).block_until_ready()
-
-    benchmark.pedantic(run, args=(x,), rounds=15, iterations=1)
-
-
-@pytest.mark.slow
-@pytest.mark.benchmark
-def test_proximal_freeb_jac(benchmark):
-    """Benchmark computing free boundary jacobian with proximal constraint."""
-    jax.clear_caches()
-    eq = desc.examples.get("ESTELL")
-    with pytest.warns(UserWarning, match="Reducing radial"):
-        eq.change_resolution(6, 6, 6, 12, 12, 12)
-    field = ToroidalMagneticField(1.0, 1.0)  # just a dummy field for benchmarking
-    objective = ObjectiveFunction(BoundaryError(eq, field=field))
-    constraint = ObjectiveFunction(ForceBalance(eq))
-    prox = ProximalProjection(objective, constraint, eq)
-    obj = LinearConstraintProjection(
-        prox, ObjectiveFunction((FixCurrent(eq), FixPressure(eq), FixPsi(eq)))
-    )
-    obj.build()
-    obj.compile()
-    x = obj.x(eq)
-
-    def run(x):
-        obj.jac_scaled(x, prox.constants).block_until_ready()
 
     benchmark.pedantic(run, args=(x,), rounds=15, iterations=1)
