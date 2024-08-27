@@ -117,9 +117,14 @@ jobs:
           path: tests/benchmarks
 
       - name: Display structure of downloaded files and unzip
+        if:
         run: |
           ls -R tests/benchmarks
-          unzip tests/benchmarks/benchmark_artifact_*.zip -d tests/benchmarks
+          if [ -f tests/benchmarks/benchmark_artifact_*.zip ]; then
+            unzip tests/benchmarks/benchmark_artifact_*.zip -d tests/benchmarks
+          else
+            echo "No benchmark artifact file found."
+          fi
 
       - name: Compare latest commit results to the master branch results
         run: |
