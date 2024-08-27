@@ -8,57 +8,76 @@ import numpy as np
 cwd = os.getcwd()
 
 data = {}
-master_idx = 0
-latest_idx = 0
+master_idx = []
+latest_idx = []
 commit_ind = 0
-for root, dirs, files in os.walk(cwd + "/compare_results_1"):
-    for filename in files:
-        if filename.find("json") != -1:  # check if json output file is present
-            try:
-                filepath = os.path.join(root, filename)
-                with open(filepath) as f:
-                    print(filepath)
-                    curr_data = json.load(f)
-                    commit_id = curr_data["commit_info"]["id"][0:7]
-                    data[commit_id] = curr_data
-                    if filepath.find("master") != -1:
-                        master_idx = commit_ind
-                    elif filepath.find("Latest_Commit") != -1:
-                        latest_idx = commit_ind
-                    commit_ind += 1
-            except Exception as e:
-                print(e)
-                continue
+folder_names = []
 
+for root1, dirs1, files1 in os.walk(cwd):
+    for dir_name in dirs1:
+        if dir_name.startswith("compare_results_"):
+            for root, dirs, files in os.walk(cwd + "/" + dir_name):
+                for filename in files:
+                    if (
+                        filename.find("json") != -1
+                    ):  # check if json output file is present
+                        try:
+                            filepath = os.path.join(root, filename)
+                            with open(filepath) as f:
+                                curr_data = json.load(f)
+                                commit_id = curr_data["commit_info"]["id"][0:7]
+                                data[commit_ind] = curr_data["benchmarks"]
+                                if filepath.find("master") != -1:
+                                    master_idx.append(commit_ind)
+                                elif filepath.find("Latest_Commit") != -1:
+                                    latest_idx.append(commit_ind)
+                                commit_ind += 1
+                        except Exception as e:
+                            print(e)
+                            continue
 
 # need arrays of size [ num benchmarks x num commits ]
 # one for mean one for stddev
 # number of benchmark cases
-num_benchmarks = len(data[list(data.keys())[0]]["benchmarks"])
-num_commits = len(list(data.keys()))
+num_benchmarks = 0
+for split in master_idx:
+    num_benchmarks += len(data[split])
+num_commits = 2
+
 times = np.zeros([num_benchmarks, num_commits])
 stddevs = np.zeros([num_benchmarks, num_commits])
 commit_ids = []
 test_names = [None] * num_benchmarks
 
-for id_num, commit_id in enumerate(data.keys()):
-    commit_ids.append(commit_id)
-    for i, test in enumerate(data[commit_id]["benchmarks"]):
+id_num = 0
+for i in master_idx:
+    for test in data[i]:
         t_mean = test["stats"]["median"]
         t_stddev = test["stats"]["iqr"]
-        times[i, id_num] = t_mean
-        stddevs[i, id_num] = t_stddev
-        test_names[i] = test["name"]
+        times[id_num, 0] = t_mean
+        stddevs[id_num, 0] = t_stddev
+        test_names[id_num] = test["name"]
+        id_num = id_num + 1
+
+id_num = 0
+for i in latest_idx:
+    for test in data[i]:
+        t_mean = test["stats"]["median"]
+        t_stddev = test["stats"]["iqr"]
+        times[id_num, 1] = t_mean
+        stddevs[id_num, 1] = t_stddev
+        test_names[id_num] = test["name"]
+        id_num = id_num + 1
 
 
 # we say a slowdown/speedup has occurred if the mean time difference is greater than
 # n_sigma * (stdev of time delta)
 significance = 3  # n_sigmas of normal distribution, ie z score of 3
 colors = [" "] * num_benchmarks  # g if faster, w if similar, r if slower
-delta_times_ms = times[:, latest_idx] - times[:, master_idx]
-delta_stds_ms = np.sqrt(stddevs[:, latest_idx] ** 2 + stddevs[:, master_idx] ** 2)
-delta_times_pct = delta_times_ms / times[:, master_idx] * 100
-delta_stds_pct = delta_stds_ms / times[:, master_idx] * 100
+delta_times_ms = times[:, 1] - times[:, 0]
+delta_stds_ms = np.sqrt(stddevs[:, 1] ** 2 + stddevs[:, 0] ** 2)
+delta_times_pct = delta_times_ms / times[:, 0] * 100
+delta_stds_pct = delta_stds_ms / times[:, 0] * 100
 for i, (pct, spct) in enumerate(zip(delta_times_pct, delta_stds_pct)):
     if pct > 0 and pct > significance * spct:
         colors[i] = "-"  # this will make the line red
@@ -85,8 +104,8 @@ for i, (dt, dpct, sdt, sdpct) in enumerate(
     line = f"{colors[i]:>1}{test_names[i]:<39} |"
     line += f" {f'{dpct:+6.2f} +/- {sdpct:4.2f}':^22} |"
     line += f" {f'{dt:+.2e} +/- {sdt:.2e}':^22} |"
-    line += f" {f'{times[i, latest_idx]:.2e} +/- {stddevs[i, latest_idx]:.1e}':^22} |"
-    line += f" {f'{times[i, master_idx]:.2e} +/- {stddevs[i, master_idx]:.1e}':^22} |"
+    line += f" {f'{times[i, 1]:.2e} +/- {stddevs[i, 1]:.1e}':^22} |"
+    line += f" {f'{times[i, 0]:.2e} +/- {stddevs[i, 0]:.1e}':^22} |"
 
     commit_msg_lines.append(line)
 
