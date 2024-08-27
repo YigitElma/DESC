@@ -105,9 +105,21 @@ jobs:
           find .benchmarks/ -type f -printf "%T@ %p\n" | sort -n | cut -d' ' -f 2- | tail -n 2 | head -n 1 > temp2
           t1=$(cat temp1)
           t2=$(cat temp2)
-          mkdir compare_results_${{ matrix.group }}
-          cp $t1 compare_results_${{ matrix.group }}
-          cp $t2 compare_results_${{ matrix.group }}
+          mkdir compare_results
+          cp $t1 compare_results
+          cp $t2 compare_results
+
+      - name: Download artifact
+        if: always()
+        uses: actions/download-artifact@v4
+        with:
+          pattern: benchmark_artifact_*
+          path: tests/benchmarks
+
+      - name: Display structure of downloaded files and unzip
+        run: |
+          ls -R tests/benchmarks
+          unzip tests/benchmarks/benchmark_artifact_*.zip -d tests/benchmarks
 
       - name: Compare latest commit results to the master branch results
         run: |
@@ -123,7 +135,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           filePath: tests/benchmarks/commit_msg.txt
-          comment_tag: benchmark_${{ matrix.group }}
+          comment_tag: benchmark
 
       - name: Upload benchmark data
         if: always()

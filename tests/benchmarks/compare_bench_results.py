@@ -15,7 +15,7 @@ folder_names = []
 
 for root1, dirs1, files1 in os.walk(cwd):
     for dir_name in dirs1:
-        if dir_name.startswith("compare_results_"):
+        if dir_name == "compare_results" or dir_name.startswith("Linux-CPython"):
             for root, dirs, files in os.walk(cwd + "/" + dir_name):
                 for filename in files:
                     if (
