@@ -86,25 +86,3 @@ def test_objective_compute_atf(benchmark):
         objective.compute_scaled_error(x, objective.constants).block_until_ready()
 
     benchmark.pedantic(run, args=(x, objective), rounds=50, iterations=1)
-
-
-@pytest.mark.slow
-@pytest.mark.benchmark
-def test_objective_jac_dshape_current(benchmark):
-    """Benchmark computing jacobian."""
-    jax.clear_caches()
-    eq = desc.examples.get("DSHAPE_current")
-    objective = LinearConstraintProjection(
-        get_equilibrium_objective(eq),
-        ObjectiveFunction(
-            maybe_add_self_consistency(eq, get_fixed_boundary_constraints(eq)),
-        ),
-    )
-    objective.build(eq)
-    objective.compile()
-    x = objective.x(eq)
-
-    def run(x):
-        objective.jac_scaled(x, objective.constants).block_until_ready()
-
-    benchmark.pedantic(run, args=(x,), rounds=15, iterations=1)
