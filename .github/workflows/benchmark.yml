@@ -116,10 +116,10 @@ jobs:
           pattern: benchmark_artifact_*
           path: tests/benchmarks
 
-      - name: Display structure of downloaded files and unzip
-        if:
+      - name: Unzip artifacts if downloaded
         run: |
-          ls -R tests/benchmarks
+          cd tests/benchmarks
+          ls
           if [ -f tests/benchmarks/benchmark_artifact_*.zip ]; then
             unzip tests/benchmarks/benchmark_artifact_*.zip -d tests/benchmarks
           else
@@ -130,7 +130,6 @@ jobs:
         run: |
           source .venv-${{ matrix.python-version }}/bin/activate
           pwd
-          cd tests/benchmarks
           python compare_bench_results.py
           cat commit_msg.txt
 

@@ -15,8 +15,14 @@ folder_names = []
 
 for root1, dirs1, files1 in os.walk(cwd):
     for dir_name in dirs1:
-        if dir_name == "compare_results" or dir_name.startswith("Linux-CPython"):
-            for root, dirs, files in os.walk(cwd + "/" + dir_name):
+        if dir_name == "compare_results" or dir_name.startswith("benchmark_artifact"):
+            print("Including folder: " + dir_name)
+            files2walk = (
+                os.walk(cwd + "/" + dir_name)
+                if dir_name == "compare_results"
+                else os.walk(cwd + "/" + dir_name + "/Linux-CPython-3.9-64bit")
+            )
+            for root, dirs, files in files2walk:
                 for filename in files:
                     if (
                         filename.find("json") != -1
@@ -88,8 +94,6 @@ for i, (pct, spct) in enumerate(zip(delta_times_pct, delta_stds_pct)):
 
 # now make the commit message, save as a txt file
 # benchmark_name dt(%) dt(s) t_new(s) t_old(s)
-print(latest_idx)
-print(master_idx)
 commit_msg_lines = [
     "```diff",
     f"| {'benchmark_name':^38} | {'dt(%)':^22} | {'dt(s)':^22} |"
