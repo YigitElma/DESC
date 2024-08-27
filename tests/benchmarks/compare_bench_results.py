@@ -11,14 +11,11 @@ data = {}
 master_idx = 0
 latest_idx = 0
 commit_ind = 0
-for diret in os.walk(cwd + "/compare_results_1"):
-    files = diret[2]
-    timing_file_exists = False
-
+for root, dirs, files in os.walk(cwd + "/compare_results_1"):
     for filename in files:
         if filename.find("json") != -1:  # check if json output file is present
             try:
-                filepath = os.path.join(diret[0], filename)
+                filepath = os.path.join(root, filename)
                 with open(filepath) as f:
                     print(filepath)
                     curr_data = json.load(f)
