@@ -129,6 +129,7 @@ jobs:
       - name: Compare latest commit results to the master branch results
         run: |
           source .venv-${{ matrix.python-version }}/bin/activate
+          cd tests/benchmarks
           pwd
           python compare_bench_results.py
           cat commit_msg.txt
